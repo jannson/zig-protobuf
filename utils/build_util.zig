@@ -76,7 +76,23 @@ pub fn getProtocDependency(b: *std.Build) !?*std.Build.Dependency {
     return null;
 }
 
+fn getEnvProtocPath(b: *std.Build) ?[]const u8 {
+    const env_vars = [_][]const u8{ "PROTOC", "PROTOC_BIN" };
+    for (env_vars) |name| {
+        if (std.process.getEnvVarOwned(b.allocator, name)) |path| {
+            if (fileExists(path)) {
+                return path;
+            }
+            b.allocator.free(path);
+        } else |_| {}
+    }
+    return null;
+}
+
 pub fn getProtocBin(b: *std.Build) !?[]const u8 {
+    if (getEnvProtocPath(b)) |path| {
+        return path;
+    }
     if (try getProtocDependency(b)) |dep| {
         if (builtin.os.tag == .windows)
             return dep.path("bin/protoc.exe").getPath(b);
