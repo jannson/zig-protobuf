@@ -10,6 +10,20 @@ pub const RunProtocStep = build_util.RunProtocStep;
 
 const PROTOC_VERSION = build_util.PROTOC_VERSION;
 
+fn protocIncludeFromEnv(b: *std.Build) ?[]const u8 {
+    const env_vars = [_][]const u8{ "PROTOC", "PROTOC_BIN" };
+    for (env_vars) |name| {
+        if (std.process.getEnvVarOwned(b.allocator, name)) |path| {
+            defer b.allocator.free(path);
+            if (!build_util.fileExists(path)) continue;
+
+            const bin_dir = std.fs.path.dirname(path) orelse continue;
+            return std.fs.path.resolve(b.allocator, &.{ bin_dir, "..", "include" }) catch null;
+        } else |_| {}
+    }
+    return null;
+}
+
 pub fn build(b: *std.Build) !void {
     // Standard target options allows the person running `zig build` to choose
     // what target to build for. Here we do not override the defaults, which
@@ -163,7 +177,12 @@ pub fn build(b: *std.Build) !void {
         test_step.dependOn(&run_main_tests.step);
     }
 
-    const include = if (try build_util.getProtocDependency(b)) |protoc| protoc.path("include").getPath(b) else std.fs.path.dirname(@src().file) orelse ".";
+    const include = if (protocIncludeFromEnv(b)) |inc|
+        inc
+    else if (try build_util.getProtocDependency(b)) |protoc|
+        protoc.path("include").getPath(b)
+    else
+        std.fs.path.dirname(@src().file) orelse ".";
 
     const bootstrap = b.step("bootstrap", "run the generator over its own sources");
 
