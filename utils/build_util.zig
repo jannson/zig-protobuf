@@ -45,6 +45,20 @@ pub fn ensureProtocBinaryDownloaded(
     return null;
 }
 
+fn getProtocBinFromEnv(b: *std.Build) ?[]const u8 {
+    const env_vars = [_][]const u8{ "PROTOC", "PROTOC_BIN" };
+    for (env_vars) |name| {
+        if (std.process.getEnvVarOwned(b.allocator, name)) |path| {
+            if (!fileExists(path)) {
+                b.allocator.free(path);
+                continue;
+            }
+            return path;
+        } else |_| {}
+    }
+    return null;
+}
+
 pub fn getProtocDependency(b: *std.Build) !?*std.Build.Dependency {
     const os: ?[]const u8 = switch (builtin.os.tag) {
         .macos => "osx",
@@ -77,6 +91,9 @@ pub fn getProtocDependency(b: *std.Build) !?*std.Build.Dependency {
 }
 
 pub fn getProtocBin(b: *std.Build) !?[]const u8 {
+    if (getProtocBinFromEnv(b)) |path| {
+        return path;
+    }
     if (try getProtocDependency(b)) |dep| {
         if (builtin.os.tag == .windows)
             return dep.path("bin/protoc.exe").getPath(b);
