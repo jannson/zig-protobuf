@@ -25,6 +25,9 @@ fn protocIncludeFromEnv(b: *std.Build) ?[]const u8 {
 }
 
 pub fn build(b: *std.Build) !void {
+    const third_part_usr = b.option([]const u8, "third_part_usr", "relative path to third-party install root") orelse "../../third-part/usr";
+    _ = third_part_usr;
+
     // Standard target options allows the person running `zig build` to choose
     // what target to build for. Here we do not override the defaults, which
     // means any target is allowed, and the default is native. Other options

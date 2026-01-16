@@ -4,8 +4,9 @@ const RunProtocStep = build_util.RunProtocStep;
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
-
+    const third_part_usr = b.option([]const u8, "third_part_usr", "relative path to third-party install root") orelse "../../third-part/usr";
     const optimize = b.standardOptimizeOption(.{});
+    _ = third_part_usr;
 
     const opts = .{ .target = target, .optimize = optimize };
     const zbench_module = b.dependency("zbench", opts).module("zbench");
