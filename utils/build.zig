@@ -1,10 +1,15 @@
 const std = @import("std");
+
+fn defaultThirdPartUsr(target: std.Build.ResolvedTarget) []const u8 {
+    return if (target.result.os.tag == .macos) "../../build/usr-macos" else "../../build/usr-linux";
+}
+
 const build_util = @import("build_util.zig");
 const RunProtocStep = build_util.RunProtocStep;
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
-    const third_part_usr = b.option([]const u8, "third_part_usr", "relative path to third-party install root") orelse "../../third-part/usr";
+    const third_part_usr = b.option([]const u8, "third_part_usr", "relative path to third-party install root") orelse defaultThirdPartUsr(target);
     const optimize = b.standardOptimizeOption(.{});
     _ = third_part_usr;
 
