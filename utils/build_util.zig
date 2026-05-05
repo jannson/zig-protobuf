@@ -5,13 +5,19 @@ pub const PROTOC_VERSION = "32.1";
 
 // File system utilities
 pub fn dirExists(path: []const u8) bool {
-    var dir = std.fs.openDirAbsolute(path, .{}) catch return false;
+    var dir = (if (std.fs.path.isAbsolute(path))
+        std.fs.openDirAbsolute(path, .{})
+    else
+        std.fs.cwd().openDir(path, .{})) catch return false;
     dir.close();
     return true;
 }
 
 pub fn fileExists(path: []const u8) bool {
-    var file = std.fs.openFileAbsolute(path, .{}) catch return false;
+    var file = (if (std.fs.path.isAbsolute(path))
+        std.fs.openFileAbsolute(path, .{})
+    else
+        std.fs.cwd().openFile(path, .{})) catch return false;
     file.close();
     return true;
 }
